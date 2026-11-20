@@ -1,3 +1,4 @@
+
 from sqlalchemy import Boolean, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -57,4 +58,9 @@ class User(TimestampMixin, Base):
         back_populates="customer",
         uselist=False,
         cascade="all, delete-orphan",
+    )
+
+    wallet: Mapped["Wallet | None"] = relationship(
+        back_populates="user",
+        uselist=False,
     )

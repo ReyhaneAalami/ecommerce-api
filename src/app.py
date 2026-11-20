@@ -7,7 +7,7 @@ from src.api.endpoints.v1.products import router as products_router
 from src.api.endpoints.v1.categories import router as categories_router
 from src.api.endpoints.v1.orders import router as orders_router
 from src.api.endpoints.v1.carts import router as carts_router
-
+from src.api.endpoints.v1.wallets import router as wallets_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -41,6 +41,11 @@ app.include_router(
 
 app.include_router(
     carts_router,
+    prefix=settings.API_V1_PREFIX,
+)
+
+app.include_router(
+    wallets_router,
     prefix=settings.API_V1_PREFIX,
 )
 

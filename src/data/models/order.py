@@ -1,5 +1,10 @@
 
-from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, String
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    ForeignKey,
+    String,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.data.base import Base, TimestampMixin
@@ -12,6 +17,10 @@ class Order(TimestampMixin, Base):
         CheckConstraint(
             "total_amount >= 0",
             name="check_order_total_amount",
+        ),
+        CheckConstraint(
+            "payment_status IN ('unpaid', 'paid', 'refunded')",
+            name="check_order_payment_status",
         ),
     )
 
@@ -26,6 +35,13 @@ class Order(TimestampMixin, Base):
     status: Mapped[str] = mapped_column(
         String(30),
         default="pending",
+        nullable=False,
+    )
+
+    payment_status: Mapped[str] = mapped_column(
+        String(30),
+        default="unpaid",
+        server_default="unpaid",
         nullable=False,
     )
 

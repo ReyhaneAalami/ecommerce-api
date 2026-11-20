@@ -2,23 +2,28 @@
 import pytest
 from uuid import uuid4
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.engine import make_url
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session
 
 from src.app import app
 from src.config import settings
 from src.connections.database import get_db
 from src.data.base import Base
 from src.data import models
-from src.data.models import User, Vendor, Category, Product
+from src.data.models import (
+    User,
+    Vendor,
+    Category,
+    Product,
+    Wallet,
+)
 from src.utils.security import create_access_token
 
 
 @pytest.fixture(scope="session")
 def test_engine():
     database_url = make_url(settings.DATABASE_URL)
-
     test_database_url = database_url.set(
         database="ecommerce_test_db"
     )
@@ -45,24 +50,41 @@ def test_engine():
 @pytest.fixture
 def db(test_engine):
     connection = test_engine.connect()
-    transaction = connection.begin()
+    outer_transaction = connection.begin()
 
-    testing_session = sessionmaker(
+    session = Session(
         bind=connection,
-        class_=Session,
         autoflush=False,
         autocommit=False,
         expire_on_commit=False,
-        join_transaction_mode="create_savepoint",
     )
 
-    session = testing_session()
+    session.begin_nested()
+
+    @event.listens_for(session, "after_transaction_end")
+    def restart_savepoint(session, transaction):
+        if (
+            transaction.nested
+            and transaction._parent is not None
+            and not transaction._parent.nested
+        ):
+            session.expire_all()
+            session.begin_nested()
 
     try:
         yield session
     finally:
+        event.remove(
+            session,
+            "after_transaction_end",
+            restart_savepoint,
+        )
+
         session.close()
-        transaction.rollback()
+
+        if outer_transaction.is_active:
+            outer_transaction.rollback()
+
         connection.close()
 
 
@@ -94,6 +116,14 @@ def customer(db):
     db.add(user)
     db.flush()
 
+    wallet = Wallet(
+        user_id=user.id,
+        balance=0,
+    )
+
+    db.add(wallet)
+    db.flush()
+
     return user
 
 
@@ -110,6 +140,14 @@ def approved_vendor(db):
     )
 
     db.add(vendor_user)
+    db.flush()
+
+    wallet = Wallet(
+        user_id=vendor_user.id,
+        balance=0,
+    )
+
+    db.add(wallet)
     db.flush()
 
     vendor = Vendor(

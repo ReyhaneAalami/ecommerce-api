@@ -1,5 +1,4 @@
-
-from sqlalchemy import select
+﻿from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from src.data.models import User
@@ -22,8 +21,7 @@ class UserRepository:
         user = User(**user_data)
 
         db.add(user)
-        db.commit()
-        db.refresh(user)
+        db.flush()
 
         return user
 

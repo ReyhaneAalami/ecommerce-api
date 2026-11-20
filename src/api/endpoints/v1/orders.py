@@ -37,13 +37,16 @@ def create_order(
             customer_id=current_user.id,
             order_data=order_data,
         )
+
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),
         ) from exc
+
     except IntegrityError as exc:
         db.rollback()
+
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Order conflicts with existing data.",
@@ -83,10 +86,49 @@ def get_my_order(
             order_id=order_id,
             customer_id=current_user.id,
         )
+
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(exc),
+        ) from exc
+
+
+@router.post(
+    "/orders/{order_id}/cancel",
+    response_model=OrderResponse,
+)
+def cancel_my_order(
+    order_id: int,
+    current_user: User = Depends(get_current_customer),
+    db: Session = Depends(get_db),
+):
+    try:
+        return OrderService.cancel_order(
+            db=db,
+            order_id=order_id,
+            customer_id=current_user.id,
+        )
+
+    except ValueError as exc:
+        message = str(exc)
+
+        if "not found" in message.lower():
+            error_status = status.HTTP_404_NOT_FOUND
+        else:
+            error_status = status.HTTP_400_BAD_REQUEST
+
+        raise HTTPException(
+            status_code=error_status,
+            detail=message,
+        ) from exc
+
+    except IntegrityError as exc:
+        db.rollback()
+
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Order cancellation conflicts with an existing transaction.",
         ) from exc
 
 
@@ -123,6 +165,7 @@ def get_vendor_order(
             vendor_order_id=vendor_order_id,
             vendor_id=current_vendor.id,
         )
+
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -147,10 +190,14 @@ def update_vendor_order_status(
             vendor_id=current_vendor.id,
             new_status=status_data.status,
         )
+
     except ValueError as exc:
         message = str(exc)
 
-        if "not found" in message.lower() or "does not belong" in message.lower():
+        if (
+            "not found" in message.lower()
+            or "does not belong" in message.lower()
+        ):
             error_status = status.HTTP_404_NOT_FOUND
         else:
             error_status = status.HTTP_400_BAD_REQUEST

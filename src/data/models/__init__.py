@@ -1,3 +1,4 @@
+
 from src.data.models.user import User
 from src.data.models.vendor import Vendor
 from src.data.models.category import Category
@@ -10,6 +11,8 @@ from src.data.models.order_item import OrderItem
 from src.data.models.cart import Cart
 from src.data.models.cart_item import CartItem
 
+from src.data.models.wallet import Wallet
+from src.data.models.wallet_transaction import WalletTransaction
 
 __all__ = [
     "User",
@@ -21,4 +24,6 @@ __all__ = [
     "OrderItem",
     "Cart",
     "CartItem",
+    "Wallet",
+    "WalletTransaction",
 ]

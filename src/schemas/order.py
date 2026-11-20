@@ -49,6 +49,7 @@ class OrderResponse(BaseModel):
     id: int
     customer_id: int
     status: str
+    payment_status: Literal["unpaid", "paid", "refunded"]
     total_amount: int
     vendor_orders: list[VendorOrderResponse]
     created_at: datetime
