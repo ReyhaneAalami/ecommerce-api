@@ -254,6 +254,8 @@ class OrderService:
             db.commit()
             return OrderRepository.get_by_id(db, order.id)
 
+        except ValueError:
+            raise
         except Exception:
             db.rollback()
             raise
@@ -282,6 +284,8 @@ class OrderService:
                 items=order_data.items,
                 idempotency_record=record,
             )
+        except ValueError:
+            raise
         except Exception:
             db.rollback()
             raise
@@ -330,6 +334,8 @@ class OrderService:
                 cart=cart,
                 idempotency_record=record,
             )
+        except ValueError:
+            raise
         except Exception:
             db.rollback()
             raise
@@ -433,6 +439,8 @@ class OrderService:
             db.commit()
             return OrderRepository.get_by_id(db, order.id)
 
+        except ValueError:
+            raise
         except Exception:
             db.rollback()
             raise
@@ -512,29 +520,43 @@ class OrderService:
                     f"Next allowed status: {expected}."
                 )
 
-            vendor_order.status = new_status
-            db.flush()
-
-            child_statuses = list(
-                db.scalars(
-                    select(VendorOrder.status).where(
+            child_status_rows = list(
+                db.execute(
+                    select(VendorOrder.id, VendorOrder.status).where(
                         VendorOrder.order_id == parent_order.id
                     )
                 ).all()
             )
+
+            child_statuses = [
+                new_status if child_id == vendor_order.id else status
+                for child_id, status in child_status_rows
+            ]
+
             priority = {
                 "pending": 1,
                 "processing": 2,
                 "shipped": 3,
                 "delivered": 4,
             }
-            if not child_statuses or any(item not in priority for item in child_statuses):
-                raise ValueError("Order has missing or unsupported suborder statuses.")
 
-            parent_order.status = min(child_statuses, key=lambda item: priority[item])
+            if not child_statuses or any(
+                item not in priority for item in child_statuses
+            ):
+                raise ValueError(
+                    "Order has missing or unsupported suborder statuses."
+                )
+
+            vendor_order.status = new_status
+            parent_order.status = min(
+                child_statuses,
+                key=lambda item: priority[item],
+            )
             db.commit()
             return OrderRepository.get_vendor_order(db, vendor_order_id, vendor_id)
 
+        except ValueError:
+            raise
         except Exception:
             db.rollback()
             raise
