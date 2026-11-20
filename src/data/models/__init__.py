@@ -1,4 +1,3 @@
-
 from src.data.models.user import User
 from src.data.models.vendor import Vendor
 from src.data.models.category import Category
@@ -13,6 +12,7 @@ from src.data.models.cart_item import CartItem
 
 from src.data.models.wallet import Wallet
 from src.data.models.wallet_transaction import WalletTransaction
+from src.data.models.idempotency_record import IdempotencyRecord
 
 __all__ = [
     "User",
@@ -26,4 +26,5 @@ __all__ = [
     "CartItem",
     "Wallet",
     "WalletTransaction",
+    "IdempotencyRecord",
 ]
