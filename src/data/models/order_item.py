@@ -1,11 +1,9 @@
 
-from decimal import Decimal
-
 from sqlalchemy import (
+    BigInteger,
     CheckConstraint,
     ForeignKey,
     Integer,
-    Numeric,
     String,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -60,13 +58,13 @@ class OrderItem(TimestampMixin, Base):
         nullable=False,
     )
 
-    unit_price: Mapped[Decimal] = mapped_column(
-        Numeric(12, 2),
+    unit_price: Mapped[int] = mapped_column(
+        BigInteger,
         nullable=False,
     )
 
-    subtotal: Mapped[Decimal] = mapped_column(
-        Numeric(12, 2),
+    subtotal: Mapped[int] = mapped_column(
+        BigInteger,
         nullable=False,
     )
 

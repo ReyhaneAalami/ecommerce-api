@@ -1,5 +1,4 @@
 
-from decimal import Decimal
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
@@ -37,7 +36,7 @@ def test_customer_can_create_order_and_stock_decreases(
 
     assert data["id"] > 0
     assert data["status"] == "pending"
-    assert Decimal(data["total_amount"]) == Decimal("200.00")
+    assert data["total_amount"] == 2000000
 
     assert len(data["vendor_orders"]) == 1
     assert data["vendor_orders"][0]["items"][0]["quantity"] == 2
@@ -204,7 +203,7 @@ def test_order_is_split_between_multiple_vendors(
         name=f"Second Product {suffix}",
         slug=f"second-product-{suffix}",
         sku=f"SECOND-SKU-{suffix}",
-        price=Decimal("100.00"),
+        price=1000000,
         stock_quantity=20,
         is_active=True,
     )
@@ -234,7 +233,7 @@ def test_order_is_split_between_multiple_vendors(
     data = response.json()
 
     assert len(data["vendor_orders"]) == 2
-    assert Decimal(data["total_amount"]) == Decimal("500.00")
+    assert data["total_amount"] == 5000000
 
     vendor_ids = {
         item["vendor_id"]
@@ -328,7 +327,7 @@ def test_vendor_cannot_access_another_vendors_order(
         name=f"Second Product {suffix}",
         slug=f"second-product-{suffix}",
         sku=f"SECOND-SKU-{suffix}",
-        price=Decimal("100.00"),
+        price=1000000,
         stock_quantity=20,
         is_active=True,
     )

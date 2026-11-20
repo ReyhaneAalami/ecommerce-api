@@ -1,6 +1,5 @@
 
 import pytest
-from decimal import Decimal
 from uuid import uuid4
 
 from sqlalchemy import create_engine
@@ -155,7 +154,7 @@ def product(db, approved_vendor, category):
         slug=f"test-product-{suffix}",
         sku=f"SKU-{suffix}",
         description="Automated test product",
-        price=Decimal("100.00"),
+        price=1000000,
         stock_quantity=20,
         is_active=True,
     )

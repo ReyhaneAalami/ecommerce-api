@@ -1,5 +1,4 @@
 from datetime import datetime
-from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -18,7 +17,7 @@ class CartProductResponse(BaseModel):
     name: str
     slug: str
     sku: str | None
-    price: Decimal
+    price: int
     stock_quantity: int
     is_active: bool
 

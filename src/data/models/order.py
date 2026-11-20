@@ -1,7 +1,5 @@
 
-from decimal import Decimal
-
-from sqlalchemy import CheckConstraint, ForeignKey, Numeric, String
+from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.data.base import Base, TimestampMixin
@@ -31,9 +29,9 @@ class Order(TimestampMixin, Base):
         nullable=False,
     )
 
-    total_amount: Mapped[Decimal] = mapped_column(
-        Numeric(12, 2),
-        default=Decimal("0.00"),
+    total_amount: Mapped[int] = mapped_column(
+        BigInteger,
+        default=0,
         nullable=False,
     )
 

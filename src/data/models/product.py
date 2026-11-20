@@ -1,11 +1,9 @@
 
-from decimal import Decimal
-
 from sqlalchemy import (
+    BigInteger,
     CheckConstraint,
     ForeignKey,
     Integer,
-    Numeric,
     String,
     Text,
 )
@@ -61,8 +59,8 @@ class Product(TimestampMixin, Base):
         nullable=True,
     )
 
-    price: Mapped[Decimal] = mapped_column(
-        Numeric(12, 2),
+    price: Mapped[int] = mapped_column(
+        BigInteger,
         nullable=False,
     )
 

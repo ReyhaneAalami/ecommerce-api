@@ -40,3 +40,7 @@ dist/
 # Temporary files
 *.tmp
 *.bak
+
+# Database backups
+backups/
+*.dump

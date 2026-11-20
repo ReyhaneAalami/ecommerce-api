@@ -1,6 +1,5 @@
 
 from collections import defaultdict
-from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -113,13 +112,13 @@ class OrderService:
             order = Order(
                 customer_id=customer_id,
                 status="pending",
-                total_amount=Decimal("0.00"),
+                total_amount=0,
             )
 
             db.add(order)
             db.flush()
 
-            order_total = Decimal("0.00")
+            order_total = 0
 
             for vendor_id, vendor_items in grouped_items.items():
                 vendor = vendor_map[vendor_id]
@@ -129,18 +128,18 @@ class OrderService:
                     vendor_id=vendor_id,
                     vendor_name=vendor.store_name,
                     status="pending",
-                    subtotal=Decimal("0.00"),
-                    shipping_fee=Decimal("0.00"),
-                    total_amount=Decimal("0.00"),
+                    subtotal=0,
+                    shipping_fee=0,
+                    total_amount=0,
                 )
 
                 db.add(vendor_order)
                 db.flush()
 
-                vendor_subtotal = Decimal("0.00")
+                vendor_subtotal = 0
 
                 for product, quantity in vendor_items:
-                    unit_price = Decimal(product.price)
+                    unit_price = product.price
                     subtotal = unit_price * quantity
 
                     order_item = OrderItem(

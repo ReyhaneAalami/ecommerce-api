@@ -1,9 +1,8 @@
 ﻿
 from datetime import datetime
-from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Literal
 
 
 # ورودی هر محصول در سفارش
@@ -24,8 +23,8 @@ class OrderItemResponse(BaseModel):
     product_name: str
     sku: str | None
     quantity: int
-    unit_price: Decimal
-    subtotal: Decimal
+    unit_price: int
+    subtotal: int
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -36,9 +35,9 @@ class VendorOrderResponse(BaseModel):
     vendor_id: int
     vendor_name: str
     status: str
-    subtotal: Decimal
-    shipping_fee: Decimal
-    total_amount: Decimal
+    subtotal: int
+    shipping_fee: int
+    total_amount: int
     items: list[OrderItemResponse]
     created_at: datetime
 
@@ -50,7 +49,7 @@ class OrderResponse(BaseModel):
     id: int
     customer_id: int
     status: str
-    total_amount: Decimal
+    total_amount: int
     vendor_orders: list[VendorOrderResponse]
     created_at: datetime
     updated_at: datetime

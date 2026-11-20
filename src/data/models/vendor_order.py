@@ -1,10 +1,8 @@
 
-from decimal import Decimal
-
 from sqlalchemy import (
+    BigInteger,
     CheckConstraint,
     ForeignKey,
-    Numeric,
     String,
     UniqueConstraint,
 )
@@ -61,21 +59,21 @@ class VendorOrder(TimestampMixin, Base):
         nullable=False,
     )
 
-    subtotal: Mapped[Decimal] = mapped_column(
-        Numeric(12, 2),
-        default=Decimal("0.00"),
+    subtotal: Mapped[int] = mapped_column(
+        BigInteger,
+        default=0,
         nullable=False,
     )
 
-    shipping_fee: Mapped[Decimal] = mapped_column(
-        Numeric(12, 2),
-        default=Decimal("0.00"),
+    shipping_fee: Mapped[int] = mapped_column(
+        BigInteger,
+        default=0,
         nullable=False,
     )
 
-    total_amount: Mapped[Decimal] = mapped_column(
-        Numeric(12, 2),
-        default=Decimal("0.00"),
+    total_amount: Mapped[int] = mapped_column(
+        BigInteger,
+        default=0,
         nullable=False,
     )
 
