@@ -1,3 +1,4 @@
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
@@ -10,6 +11,7 @@ from src.schemas.product import (
     ProductCreate,
     ProductUpdate,
     ProductResponse,
+    ProductSearchResponse,
 )
 from src.services.product_service import ProductService
 
@@ -20,19 +22,39 @@ router = APIRouter(
 )
 
 
-# Public: List active products
+# Public: Search and filter active products.
+# Keep this route before /{product_id}.
 @router.get(
-    "",
-    response_model=list[ProductResponse],
+    "/search",
+    response_model=ProductSearchResponse,
 )
-def get_products(
+def search_products(
+    q: str | None = Query(default=None, max_length=200),
+    category_id: int | None = Query(default=None, ge=1),
+    vendor_id: int | None = Query(default=None, ge=1),
+    min_price: int | None = Query(default=None, ge=0),
+    max_price: int | None = Query(default=None, ge=0),
+    in_stock: bool | None = Query(default=None),
+    sort_by: Literal[
+        "newest",
+        "price_asc",
+        "price_desc",
+        "name_asc",
+    ] = Query(default="newest"),
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=20, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
     try:
-        return ProductService.get_products(
+        return ProductService.search_products(
             db,
+            q=q,
+            category_id=category_id,
+            vendor_id=vendor_id,
+            min_price=min_price,
+            max_price=max_price,
+            in_stock=in_stock,
+            sort_by=sort_by,
             skip=skip,
             limit=limit,
         )
@@ -43,7 +65,26 @@ def get_products(
         ) from exc
 
 
-# Vendor: List own products
+# Public: List active products (backward compatible).
+@router.get(
+    "",
+    response_model=list[ProductResponse],
+)
+def get_products(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=20, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    try:
+        return ProductService.get_products(db, skip=skip, limit=limit)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+
+
+# Vendor: List own products.
 @router.get(
     "/vendor/me",
     response_model=list[ProductResponse],
@@ -68,7 +109,7 @@ def get_my_products(
         ) from exc
 
 
-# Vendor: Create product
+# Vendor: Create product.
 @router.post(
     "",
     response_model=ProductResponse,
@@ -98,7 +139,7 @@ def create_product(
         ) from exc
 
 
-# Public: Get product details
+# Public: Get product details.
 @router.get(
     "/{product_id}",
     response_model=ProductResponse,
@@ -108,10 +149,7 @@ def get_product(
     db: Session = Depends(get_db),
 ):
     try:
-        return ProductService.get_product(
-            db,
-            product_id,
-        )
+        return ProductService.get_product(db, product_id)
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -119,7 +157,7 @@ def get_product(
         ) from exc
 
 
-# Vendor: Update own product
+# Vendor: Update own product.
 @router.patch(
     "/{product_id}",
     response_model=ProductResponse,
@@ -150,7 +188,7 @@ def update_product(
         ) from exc
 
 
-# Vendor: Soft-delete own product
+# Vendor: Soft-delete own product.
 @router.delete(
     "/{product_id}",
     response_model=ProductResponse,
