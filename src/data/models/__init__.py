@@ -11,9 +11,11 @@ from src.data.models.wallet import Wallet
 from src.data.models.wallet_transaction import WalletTransaction
 from src.data.models.idempotency_record import IdempotencyRecord
 from src.data.models.payment import Payment
+from src.data.models.product_review import ProductReview
+from src.data.models.payout_request import PayoutRequest
 
 __all__ = [
     "User", "Vendor", "Category", "Product", "Order", "VendorOrder",
     "OrderItem", "Cart", "CartItem", "Wallet", "WalletTransaction",
-    "IdempotencyRecord", "Payment",
+    "IdempotencyRecord", "Payment", "ProductReview", "PayoutRequest",
 ]

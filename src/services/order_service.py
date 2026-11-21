@@ -14,6 +14,8 @@ from src.data.models import (
     VendorOrder,
     OrderItem,
     IdempotencyRecord,
+    Wallet,
+    WalletTransaction,
 )
 from src.repositories.order_repository import OrderRepository
 from src.repositories.cart_repository import CartRepository
@@ -552,6 +554,43 @@ class OrderService:
                 child_statuses,
                 key=lambda item: priority[item],
             )
+
+            # Vendor earnings become withdrawable only after this suborder is
+            # marked delivered. The unique ledger index is the final exactly-once
+            # guard; the wallet row lock serializes concurrent delivery callbacks.
+            if new_status == "delivered":
+                vendor = db.scalar(
+                    select(Vendor).where(Vendor.id == vendor_id)
+                )
+                if vendor is None:
+                    raise ValueError("Vendor not found.")
+                vendor_wallet = db.scalar(
+                    select(Wallet)
+                    .where(Wallet.user_id == vendor.user_id)
+                    .with_for_update()
+                )
+                if vendor_wallet is None:
+                    raise ValueError("Vendor wallet not found.")
+                existing_earning = db.scalar(
+                    select(WalletTransaction.id).where(
+                        WalletTransaction.transaction_type == "vendor_earning",
+                        WalletTransaction.reference_type == "vendor_order",
+                        WalletTransaction.reference_id == vendor_order.id,
+                    )
+                )
+                if existing_earning is None:
+                    vendor_wallet.balance += vendor_order.subtotal
+                    db.add(
+                        WalletTransaction(
+                            wallet_id=vendor_wallet.id,
+                            transaction_type="vendor_earning",
+                            amount=vendor_order.subtotal,
+                            balance_after=vendor_wallet.balance,
+                            reference_type="vendor_order",
+                            reference_id=vendor_order.id,
+                            description=f"Earnings for delivered vendor order #{vendor_order.id}",
+                        )
+                    )
             db.commit()
             return OrderRepository.get_vendor_order(db, vendor_order_id, vendor_id)
 
